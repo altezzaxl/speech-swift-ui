@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>Speech Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="engine-rail" aria-label="Модели синтеза">
+        <header class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div>
+            <strong>Speech Studio</strong>
+            <small>on-device · MLX</small>
+          </div>
+        </header>
+
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+          <input id="engine-search" type="search" placeholder="Найти модель" autocomplete="off" />
+        </label>
+
+        <div class="rail-label">Движки</div>
+        <nav id="engine-list" class="engine-list"></nav>
+
+        <footer class="rail-footer">
+          <button id="history-toggle" class="ghost-button full-width" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5m4-3v6l4 2"/></svg>
+            История
+            <span id="history-count" class="count-pill">0</span>
+          </button>
+          <div id="system-status" class="system-status"><span></span> Проверка системы…</div>
+        </footer>
+      </aside>
+
+      <main class="workspace">
+        <header class="workspace-header">
+          <div>
+            <div class="eyebrow">Новая генерация</div>
+            <h1 id="workspace-title">Qwen3 TTS</h1>
+          </div>
+          <div class="header-actions">
+            <label class="preset-select-wrap">
+              <span class="sr-only">Пресет</span>
+              <select id="preset-select" aria-label="Пресет"><option value="">Без пресета</option></select>
+            </label>
+            <button id="save-preset" class="ghost-button" type="button">Сохранить пресет</button>
+            <button id="delete-preset" class="text-button" type="button" disabled>Удалить пресет</button>
+          </div>
+        </header>
+
+        <section class="editor-card">
+          <div class="editor-toolbar">
+            <div id="engine-summary" class="engine-summary"></div>
+            <button id="clear-text" class="text-button" type="button">Очистить</button>
+          </div>
+          <label class="sr-only" for="script-text">Текст для синтеза</label>
+          <textarea id="script-text" placeholder="Введите текст, который должен прозвучать…" spellcheck="true"></textarea>
+          <div class="editor-footer">
+            <div class="text-meta"><span id="char-count">0 знаков</span><span>⌘ ↵ — запустить</span></div>
+            <div class="generate-actions">
+              <button id="cancel-button" class="ghost-button hidden" type="button">Отменить</button>
+              <button id="generate-button" class="primary-button" type="button">
+                <span class="button-label">Сгенерировать</span>
+                <span class="shortcut">⌘↵</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="result-region" class="result-region" aria-live="polite">
+          <div id="empty-result" class="empty-result">
+            <div class="empty-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div><strong>Здесь появится результат</strong><p>Первая генерация может занять дольше — модель загрузится в память.</p></div>
+          </div>
+          <div id="running-result" class="running-result hidden">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="running-copy"><strong id="running-title">Запускаю модель…</strong><p id="running-detail">Подготавливаю локальный пайплайн</p></div>
+            <button id="show-log" class="text-button" type="button">Показать лог</button>
+          </div>
+          <div id="audio-result" class="audio-result hidden">
+            <div class="result-topline">
+              <div><span class="success-dot"></span><strong id="result-title">Готово</strong><small id="result-meta"></small></div>
+              <div class="result-actions"><button id="studio-enhance-button" class="primary-button" type="button">Сделать студийную версию</button><a id="download-audio" class="ghost-button" download="speech-studio.wav">Скачать WAV</a></div>
+            </div>
+            <audio id="audio-player" controls preload="metadata"></audio>
+            <div id="audio-variant-note" class="audio-variant-note hidden"></div>
+            <details class="command-details"><summary>Команда и лог</summary><pre id="command-output"></pre></details>
+          </div>
+          <div id="error-result" class="error-result hidden">
+            <div class="error-icon">!</div>
+            <div><strong>Не получилось сгенерировать</strong><p id="error-message"></p></div>
+            <button id="retry-button" class="ghost-button" type="button">Повторить</button>
+          </div>
+          <pre id="live-log" class="live-log hidden"></pre>
+        </section>
+      </main>
+
+      <aside class="inspector" aria-label="Параметры генерации">
+        <header class="inspector-header">
+          <div><span class="eyebrow">Параметры</span><strong id="inspector-engine">Qwen3 TTS</strong></div>
+          <button id="reset-settings" class="icon-button" type="button" title="Сбросить настройки" aria-label="Сбросить настройки">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5m9.5-4A8 8 0 0 0 5 8m.5 8A8 8 0 0 0 19 16"/></svg>
+          </button>
+        </header>
+        <div id="settings-form" class="settings-form"></div>
+        <details class="settings-section cli-section">
+          <summary><span>CLI Advanced</span><small>любой новый флаг</small><button class="help-button section-help-button" type="button" data-help-group="CLI Advanced" aria-label="Что такое CLI Advanced">?</button></summary>
+          <div class="section-fields">
+            <label class="field field-full"><span class="field-label"><span>Raw arguments</span><button class="help-button" type="button" data-help-field="rawArgs" aria-label="Что такое Raw arguments">?</button></span><input id="raw-args" type="text" placeholder="--flag value" /><small>Запускаются напрямую, без shell. <code>--output</code> зарезервирован.</small></label>
+            <div class="command-preview"><span>Команда</span><code id="command-preview">speech speak …</code></div>
+          </div>
+        </details>
+        <footer class="inspector-footer"><span>Настройки сохраняются в этом браузере</span></footer>
+      </aside>
+    </div>
+
+    <aside id="history-drawer" class="history-drawer" aria-label="История генераций" aria-hidden="true">
+      <header><div><span class="eyebrow">Локально</span><h2>История</h2></div><button id="history-close" class="icon-button" type="button" aria-label="Закрыть историю">×</button></header>
+      <div id="history-list" class="history-items"></div>
+    </aside>
+    <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
+
+    <dialog id="preset-dialog" class="preset-dialog">
+      <form method="dialog">
+        <div><span class="eyebrow">Новый пресет</span><h2>Сохранить настройки</h2></div>
+        <label class="field field-full"><span>Название</span><input id="preset-name" autocomplete="off" placeholder="Например, Спокойный русский" /></label>
+        <div class="dialog-actions"><button value="cancel" class="ghost-button">Отмена</button><button id="confirm-preset" value="default" class="primary-button">Сохранить</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="help-dialog" class="voice-help-dialog" aria-labelledby="help-title">
+      <form method="dialog">
+        <div class="dialog-heading"><span id="help-eyebrow" class="eyebrow">Подсказка</span><h2 id="help-title">Параметр</h2></div>
+        <div id="help-content" class="voice-help-copy"></div>
+        <div class="dialog-actions"><button value="close" class="primary-button">Понятно</button></div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
